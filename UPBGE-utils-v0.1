@@ -1,0 +1,178 @@
+import bge
+import bpy
+
+class Scene:
+    def GetSceneObjects():
+        return Scene.GetActiveScene().objects
+    
+    def GetActiveScene():
+        return bge.logic.getCurrentScene()
+        
+    def CountSceneObjects():
+        ct =0
+        for obj in Scene.GetSceneObjects():
+            ct+=1
+            
+        return ct
+    
+    def NewScene(name):
+        bge.logic.addScene(str(name))
+
+class Object:
+    def GetPos(object,local=False):
+        return object.worldPosition if not local else object.localPosition
+    
+    def GetRot(object,local=False):
+        return object.worldOrientation if not local else object.localOrientation
+    
+    def GetRot(object,local=False):
+        return object.worldScale if not local else object.localScale
+    
+    def GetTransform(object,local=False):
+        return object.worldTransform if not local else object.localTransform
+    
+    def SetVisible(object,IsVisible=False,recursive=False):
+        if object != None:
+            object.setVisible(True if IsVisible != None or IsVisible == True else False,True if recursive != None or recursive == True else False)
+        else:
+            print("Ínvalid Object "+str(object.name))
+        
+    def GetName(object):
+        return object.name
+    
+    def GetObject(name):
+        objs=Object.GetActiveScene().objects
+        if name in objs:
+            return objs[str(name)]
+        else:
+            print("Unable to find "+name+" in scene")
+    
+    def SetPos(object,newPos,local):
+        firstPos=object.worldPosition if not local else object.localPosition 
+        firstPos=newPos
+    
+    def SetRot(object,newRot,local):
+        firstRot=object.worldOrientation if not local else object.localOrientation
+        firstRot = newRot
+        
+    def SetScale(object,newScale,local):
+        firstScale=object.worldScale if not local else object.localScale
+        firstScale=newScale
+        
+    def SetTransform(object,newTransform,local):
+        firstTransform=object.worldTransform if not local else object.localTransform
+        firstTransform=newTransform
+        
+    def SetName(object,newName):
+        object.name - newName
+    
+    def GetProperty(object,property):
+        props=object.getProperties()
+        if property in props:
+            return object.get(str(property))
+    
+    def SetProperty(object,property,value):
+        props=object.getProperties()
+        if property in props and type(value) == type(object.get(str(property))):
+            object[str(property)]=value
+        elif type(value) != type(object.get(str(property))):
+            print("Inválid value type "+type(value))
+        elif not str(property) in object.getProperties():
+            print("Property "+str(property)+"does not exists!")
+    
+    def ExistProperty(object,prop):
+        return str(prop) in object.getProperties()
+    
+    def CompareProperty(object, prop, prop2, comparationSymbol='=='):
+        if Object.ExistProperty(object, prop) and Object.ExistProperty(object, prop2):
+            value1 = object[prop]
+            value2 = object[prop2]
+            
+            # Dicionário de operadores seguros
+            operators = {
+                '==': lambda x, y: x == y,
+                '!=': lambda x, y: x != y,
+                '<': lambda x, y: x < y,
+                '<=': lambda x, y: x <= y,
+                '>': lambda x, y: x > y,
+                '>=': lambda x, y: x >= y
+            }
+            
+            if comparationSymbol in operators:
+                return operators[comparationSymbol](value1, value2)
+            else:
+                raise ValueError("Operador de comparação inválido: {}".format(comparationSymbol))
+        else:
+            raise ValueError("Uma ou ambas as propriedades não existem no objeto.")    
+        
+        
+    def ComparePropertyValue(object, prop, value, comparationSymbol='=='):
+        if Object.ExistProperty(object, prop):
+            value1 = object[prop]
+            
+            # Dicionário de operadores seguros
+            operators = {
+                '==': lambda x, y: x == y,
+                '!=': lambda x, y: x != y,
+                '<': lambda x, y: x < y,
+                '<=': lambda x, y: x <= y,
+                '>': lambda x, y: x > y,
+                '>=': lambda x, y: x >= y
+            }
+            
+            if comparationSymbol in operators:
+                return operators[comparationSymbol](value1, value)
+            else:
+                raise ValueError("Operador de comparação inválido: {}".format(comparationSymbol))
+        else:
+            raise ValueError("Uma ou ambas as propriedades não existem no objeto.")    
+        
+    def GetDistance(object,object2,local):
+        return object.worldPosition if not local else object.localPosition - object2.worldPosition if not local else object2.localPosition
+    
+    
+    def SendMessage(obj, subject, message, target):
+        if obj is not None and subject is not None and message is not None:
+            if target is not None and obj is not None:
+                bge.logic.globalDict[str(subject)]={
+                    'message':message,
+                    'target':target,
+                    'sender':obj,
+                }
+            elif target is None and obj is not None:
+                bge.logic.globalDict[str(subject)]={
+                    'message':message,
+                    'sender':obj,
+                }
+            elif target is None and obj is None:
+                bge.logic.globalDict[str(subject)]={
+                    'message':message,
+                }
+            elif subject is None and message is None:
+                ReferenceError("Inválid arguments in SendMessage function")
+                print("Inválid argument in SendMessage Function")
+            
+        return bge.logic.globalDict.get(str(subject)) is not None
+
+    def ReceiveMessage(message_subject):
+        fnd = bge.logic.globalDict.get(str(message_subject))
+        if fnd is not None:
+            del bge.logic.globalDict[str(message_subject)]
+            return True,fnd['message'],fnd['sender']
+        else:
+            return False
+
+
+class Input:
+    def OnKeyDown(key):
+        kb = bge.logic.keyboard.inputs
+        return kb[bge.events.__getattribute__(key)].active
+
+    def OnKeyPressed(key):
+        kb = bge.logic.keyboard.inputs
+        return kb[bge.events.__getattribute__(key)].activated
+
+    def OnKeyRelease(key):
+        kb = bge.logic.keyboard.inputs
+        return kb[bge.events.__getattribute__(key)].released
+    
